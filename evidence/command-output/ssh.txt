@@ -1,0 +1,10 @@
+=== SSH Security Verification ===
+
+Command:
+sudo sshd -T | grep -E '^(passwordauthentication|pubkeyauthentication)'
+
+Result:
+pubkeyauthentication yes
+passwordauthentication no
+
+Status: PASS

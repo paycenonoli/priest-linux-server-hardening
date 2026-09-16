@@ -1,0 +1,14 @@
+=== UFW Firewall Verification ===
+
+Command:
+sudo ufw status verbose
+
+Result:
+Status: active
+Default: deny (incoming), allow (outgoing)
+
+Allowed inbound ports:
+22/tcp - SSH
+80/tcp - HTTP
+
+Status: PASS

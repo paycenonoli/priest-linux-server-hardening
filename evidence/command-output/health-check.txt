@@ -1,0 +1,29 @@
+=== Server Health Check ===
+
+Command:
+bash verify-server.sh
+
+Result:
+
+Hostname:
+linux-hardening
+
+Load average:
+0.00, 0.00, 0.00
+
+Memory:
+908Mi total
+575Mi available
+
+Disk:
+6.7G total
+2.7G used
+4.0G available
+41% used
+
+Services:
+[OK] ssh is active
+[OK] nginx is active
+[OK] fail2ban is active
+
+Status: PASS

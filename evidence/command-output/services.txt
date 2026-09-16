@@ -1,0 +1,16 @@
+=== Critical Services Verification ===
+
+Command:
+systemctl is-active ssh nginx fail2ban
+
+Result:
+active
+active
+active
+
+Services:
+ssh     - active
+nginx   - active
+fail2ban - active
+
+Status: PASS
