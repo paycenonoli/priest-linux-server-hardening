@@ -1,0 +1,200 @@
+---
+- name: Configure Linux hardening server
+  hosts: linux_servers
+  become: true
+
+  tasks:
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: linux-hardening
+
+    - name: Set timezone to UTC
+      community.general.timezone:
+        name: UTC
+
+    - name: Create administrative user
+      ansible.builtin.user:
+        name: devopsadmin
+        groups: sudo
+        append: true
+        shell: /bin/bash
+        create_home: true
+        password: "{{ devopsadmin_password_hash }}"
+
+    - name: Configure SSH key for administrative user
+      ansible.posix.authorized_key:
+        user: devopsadmin
+        state: present
+        key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+
+    - name: Install required security and web packages
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - fail2ban
+          - unattended-upgrades
+        state: present
+        update_cache: true
+
+    - name: Allow SSH through UFW
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+
+    - name: Allow HTTP through UFW
+      community.general.ufw:
+        rule: allow
+        port: "80"
+        proto: tcp
+
+    - name: Set UFW default incoming policy
+      community.general.ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Set UFW default outgoing policy
+      community.general.ufw:
+        direction: outgoing
+        policy: allow
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+
+    - name: Enable and start Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Enable and start Fail2Ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: true
+
+    - name: Configure automatic package updates
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+
+    - name: Create project web page
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Linux Server Hardening</title>
+          </head>
+          <body>
+              <h1>Linux Server Hardening Project</h1>
+              <p>Nginx is running successfully.</p>
+              <h2>Server Status</h2>
+              <ul>
+                  <li>Operating System: Ubuntu Linux</li>
+                  <li>Web Server: Nginx</li>
+                  <li>Firewall: UFW</li>
+                  <li>SSH: Key-based authentication</li>
+                  <li>Security Updates: Enabled</li>
+              </ul>
+              <p>Server configuration and security hardening are in progress.</p>
+          </body>
+          </html>
+
+    - name: Disable SSH password authentication
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/99-linux-hardening.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          PasswordAuthentication no
+          PubkeyAuthentication yes
+      notify: Restart SSH
+
+    - name: Configure Fail2Ban for SSH
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/jail.d/sshd.local
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          [sshd]
+          enabled = true
+          backend = systemd
+          port = ssh
+      notify: Restart Fail2Ban
+
+    - name: Configure unattended security upgrades
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/51linux-hardening
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Unattended-Upgrade::Allowed-Origins {
+              "${distro_id}:${distro_codename}-security";
+          };
+
+    - name: Deploy server verification script
+      ansible.builtin.copy:
+        src: ../scripts/verify-server.sh
+        dest: /usr/local/bin/verify-server.sh
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create backup directory
+      ansible.builtin.file:
+        path: /var/backups/linux-hardening
+        state: directory
+        owner: root
+        group: root
+        mode: "0750"
+
+    - name: Back up Linux hardening configuration
+      ansible.builtin.archive:
+        path:
+          - /etc
+          - /var/www/html
+          - /home/devopsadmin
+        dest: /var/backups/linux-hardening/linux-hardening-backup.tar.gz
+        format: gz
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Verify critical services
+      ansible.builtin.command:
+        cmd: systemctl is-active ssh nginx fail2ban
+      register: service_status
+      changed_when: false
+
+    - name: Verify SSH hardening
+      ansible.builtin.shell:
+        cmd: "sshd -T | grep -E '^(passwordauthentication|pubkeyauthentication)'"
+      register: ssh_hardening
+      changed_when: false
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    - name: Restart Fail2Ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: restarted

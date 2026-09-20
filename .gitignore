@@ -1,0 +1,32 @@
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan
+terraform/crash.log
+terraform/crash.*.log
+
+# Terraform variable files
+terraform/*.tfvars
+terraform/*.tfvars.json
+
+# Ansible
+*.retry
+
+# SSH private keys
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+
+# Secrets
+.env
+.env.*
+*.secret
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+terraform/tfplan

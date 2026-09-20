@@ -1,0 +1,38 @@
+=== Terraform + Ansible Server Verification ===
+
+Configuration management:
+Ansible
+
+Server:
+linux-hardening
+
+SSH:
+pubkeyauthentication yes
+passwordauthentication no
+
+UFW:
+Status: active
+Default: deny (incoming), allow (outgoing)
+
+Allowed inbound ports:
+22/tcp - SSH
+80/tcp - HTTP
+
+Services:
+ssh     - active
+nginx   - active
+fail2ban - active
+
+Fail2Ban:
+sshd jail active
+
+Disk:
+35% used
+
+Memory:
+533Mi available
+
+Website:
+HTTP response verified successfully.
+
+Status: PASS

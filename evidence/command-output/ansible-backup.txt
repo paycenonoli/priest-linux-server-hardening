@@ -1,0 +1,18 @@
+=== Ansible Backup Verification ===
+
+Backup script:
+ /usr/local/bin/verify-server.sh
+
+Permissions:
+-rwxr-xr-x root root
+
+Backup archive:
+/var/backups/linux-hardening/linux-hardening-backup.tar.gz
+
+Permissions:
+-rw------- root root
+
+Backup size:
+720K
+
+Status: PASS
